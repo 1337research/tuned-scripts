@@ -1,0 +1,55 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © JMOZ (1337.LTD)
+//
+// Supertrend
+
+
+// Inputs
+period = intInput("ATR Period", 7)
+mult = numInput("ATR Multiplier", 7.0)
+
+
+// Calculations
+atr = mult * atr(period)
+up = hl2 - atr
+down = hl2 + atr
+
+upper = ref(0.0)
+upper.set(iff(gt(close[1], upper[1]), max(up, upper[1]), up))
+lower = ref(0.0)
+lower.set(iff(lt(close[1], lower[1]), min(down, lower[1]), down))
+
+st_dir = ref(0.0)
+st_dir.set(iff(
+    gt(close, lower[1]), 
+    seriesOf(1.0), 
+    iff(
+        lt(close, upper[1]), 
+        seriesOf(-1.0), 
+        nz(st_dir[1], seriesOf(1.0))
+    ) 
+))
+
+st_line = iff(eq(st_dir, seriesOf(1.0)), upper, lower)
+
+
+// Conditions
+buy = crossover(close, st_line)
+sell = crossunder(close, st_line)
+
+
+// Plots
+st_colour = iff(
+    and(eq(st_dir, seriesOf(1.0)), eq(st_dir[1], seriesOf(1.0))), 
+    seriesOf("#00ff00"), 
+    iff(
+        and(eq(st_dir, seriesOf(-1.0)), eq(st_dir[1], seriesOf(-1.0))), 
+        seriesOf("#ff0000"),
+        seriesOf("#000000")
+    )
+)
+plot(st_line, "Supertrend", st_colour, 2, PlotStyle.LINEBR)
+
+
+// Signal Push
+out(signalIf(buy, sell))
