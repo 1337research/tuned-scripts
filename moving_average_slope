@@ -1,0 +1,27 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © JMOZ (1337.LTD)
+//
+// Moving average slope system
+
+//Inputs
+fast_len = intInput("Fast", 10) 
+slow_len = intInput("Slow", 200)
+fast_rising_len = intInput("Fast rising length", 2)
+slow_rising_len = intInput("Slow rising length", 2)
+
+//indicator
+fast = sma(close, fast_len)
+slow = sma(close, slow_len)
+
+//Conditions
+long_entry = and( and(rising(fast, fast_rising_len), rising(slow, slow_rising_len)), not(position_long) )
+long_close = falling(fast, fast_rising_len)
+short_entry = and( and(falling(fast, fast_rising_len), falling(slow, slow_rising_len)), not(position_short) )
+short_close = rising(fast, fast_rising_len)
+
+//Plot
+plot(fast, "Fast", "#004BEC", 2)
+plot(slow, "Slow", "#FFEE00", 2)
+
+//Signal Push
+out(signalIf(long_entry, short_entry, long_close, short_close))
