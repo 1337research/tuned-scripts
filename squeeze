@@ -1,0 +1,55 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © JMOZ (1337research.com)
+//
+// Squeeze indicator example
+// (buy and sell signals are just for example and not advised to use)
+
+//Inputs
+ma_len = intInput("MA length", 20)
+bb_mult = numInput("BB multiplier", 2.0)
+atr_len = intInput("ATR length", 14)
+atr_mult = numInput("ATR multiplier", 1.5)
+
+
+//indicator
+basis = sma(close, ma_len)
+std = stdev(close, ma_len)
+bb_up = basis + (bb_mult * std)
+bb_down = basis - (bb_mult * std)
+atr = atr(atr_len)
+k_up = basis + atr * atr_mult
+k_down = basis - atr * atr_mult
+squeeze = and(
+    gt(bb_down, k_down),
+    lt(bb_up, k_up)
+)
+breakout = or(
+    and(squeeze, gt(close, bb_up)),
+    and(squeeze, lt(close, bb_down))
+)
+
+
+//Conditions
+buy = and(
+    not(squeeze),
+    gt(close, bb_up)
+)
+sell = and(
+    not(squeeze),
+    lt(close, bb_down)
+)
+
+
+//Plot
+plot(bb_up, "BB up", "#ff0000", 2, PlotStyle.LINE, 50)
+plot(bb_down, "BB down", "#ff0000", 2, PlotStyle.LINE, 50)
+plot(k_up, "Keltner up", "#0000ff", 2, PlotStyle.LINE, 50)
+plot(k_down, "Keltner down", "#0000ff", 2, PlotStyle.LINE, 50)
+squeeze_plot = iff(squeeze, basis, seriesOf(na))
+plot(squeeze_plot, "Squeeze", "#00ff00", 3, PlotStyle.CROSS)
+breakout_plot = iff(breakout, basis, seriesOf(na))
+plot(breakout_plot, "Breakout", "#ff0000", 3, PlotStyle.CROSS)
+
+
+//Signal Push
+out(signalIf(buy, sell))
