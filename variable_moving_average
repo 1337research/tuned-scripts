@@ -1,0 +1,55 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © JMOZ (https://1337research.com)
+//
+// Variable Moving Average
+l = intInput("VMA Length", 10)
+
+// VMA
+k = 1.0/l
+pdm = max((close - close[1]), seriesOf(0.0))
+mdm = max((close[1] - close), seriesOf(0.0))
+pdmS = ref(0.0)
+pdmS.set((1 - k)*nz(pdmS[1]) + k*pdm)
+mdmS = ref(0.0)
+mdmS.set((1 - k)*nz(mdmS[1]) + k*mdm)
+s = pdmS + mdmS
+pdi = pdmS/s
+mdi = mdmS/s
+pdiS = ref(0.0)
+pdiS.set((1 - k)*nz(pdiS[1]) + k*pdi)
+mdiS = ref(0.0)
+mdiS.set((1 - k)*nz(mdiS[1]) + k*mdi)
+d = abs(pdiS - mdiS)
+s1 = pdiS + mdiS
+iS = ref(0.0)
+iS.set((1 - k)*nz(iS[1]) + k*d/s1)
+hhv = highest(iS, l) 
+llv = lowest(iS, l) 
+d1 = hhv - llv
+vI = (iS - llv)/d1
+vma = ref(0.0)
+vma.set((1 - k*vI)*nz(vma[1]) + k*vI*close)
+// END VMA
+
+flat = eq(vma, vma[1])
+
+buy = gt(vma, vma[1])
+sell = lt(vma, vma[1])
+
+vmaC=iff(
+    gt(vma, vma[1]), 
+    seriesOf("#00ff00"), 
+    iff(
+        lt(vma, vma[1]), 
+        seriesOf("#ff0000"), 
+        iff(
+            flat, 
+            seriesOf("#0000ff"), 
+            seriesOf("#000000")
+        )
+    )
+)
+plot(vma, "VMA", vmaC, 3)
+
+//Signal Push
+out(signalIf(buy, sell))
