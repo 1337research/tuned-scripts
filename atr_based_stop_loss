@@ -1,0 +1,68 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © 1337 Research / JMOZ (https://1337research.com)
+//
+// ATR based stop loss
+
+//Inputs
+ShortMA = intInput("ShortMA",6) 
+LongMA = intInput("LongMA",35)  
+
+//indicator
+TMA = tema(close,ShortMA)
+DMA = dema(close,LongMA)
+
+//Conditions
+buy = crossover(TMA, DMA) 
+sell = crossunder(TMA, DMA)
+
+//Plot
+plot(TMA, "Short", "#004BEC", 2)
+plot(DMA, "Long", "#FFEE00", 2)
+
+// ATR stop by JMOZ
+use_atr_stop = boolInput("Use ATR stop", false)
+atr_stop_len = intInput("ATR stop length", 14)
+atr_stop_mult = numInput("ATR multiplier", 2.0)
+long_source = srcInput("Long source", "low")
+short_source = srcInput("Short source", "high")
+atr = atr_stop_mult * atr(atr_stop_len)
+new_sig = or(neq(position_long, position_long[1]), neq(position_short, position_short[1]))
+//plot(new_sig, "New signal/position", "#ffff00", 2, PlotStyle.LINE, 0, false) // debug show new signal/position
+stop_long = ref(0.0)
+stop_long.set(iff(
+    and(new_sig, position_long), 
+    valuewhen(position_long, shift(low, 1), 0) - atr, 
+    iff(
+        not(position_long), 
+        seriesOf(na), 
+        stop_long[1]
+    )
+))
+stop_short = ref(0.0)
+stop_short.set(iff(
+    and(new_sig, position_short), 
+    valuewhen(position_short, shift(high, 1), 0) + atr, 
+    iff(
+        not(position_short), 
+        seriesOf(na), 
+        stop_short[1]
+    )
+))
+plot(iff(seriesOf(use_atr_stop), stop_long, seriesOf(na)), "Long stop", seriesOf("#ffff00"), 2)
+plot(iff(seriesOf(use_atr_stop), stop_short, seriesOf(na)), "Short stop", seriesOf("#ffff00"), 2)
+conf_stopLossAbsPrice.set(
+    iff(seriesOf(use_atr_stop),
+        iff(position_long, 
+            stop_long, 
+            iff(position_short, 
+                stop_short, 
+                seriesOf(na)
+            )
+        ),
+        seriesOf(na)
+    )
+)
+// End ATR stop
+
+//Signal Push
+out(signalIf(buy, sell))
