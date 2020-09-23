@@ -1,0 +1,34 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © 1337 Research / JMOZ (https://1337research.com)
+//
+// Bars/time stop
+
+//Inputs
+ShortMA = intInput("ShortMA",6) 
+LongMA = intInput("LongMA",35)  
+bars_limit = seriesOf(numInput("Bars/time stop", 5.0))
+
+//indicator
+TMA = tema(close,ShortMA)
+DMA = dema(close,LongMA)
+
+//Conditions
+buy = crossover(TMA, DMA) 
+sell = crossunder(TMA, DMA)
+
+// Bars stop
+new_position = or(neq(position_long, position_long[1]), neq(position_short, position_short[1]))
+bars = ref(0.0)
+bars.set(iff(and(position_open, not(new_position)), (bars[1]+1.0), seriesOf(0.0)))
+// End bars stop
+
+bars_limit = gte(bars, bars_limit)
+buy_close = and(bars_limit, position_long)
+sell_close = and(bars_limit, position_short)
+
+//Plot
+plot(TMA, "Short", "#004BEC", 2)
+plot(DMA, "Long", "#FFEE00", 2)
+
+//Signal Push
+out(signalIf(buy, sell, buy_close, sell_close))
