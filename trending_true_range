@@ -1,0 +1,18 @@
+// This work is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License https://creativecommons.org/licenses/by-sa/4.0/
+// © 1337 Research / JMOZ (https://1337research.com)
+// Source: https://uk.tradingview.com/script/8e1f2wFW-Trending-True-Range/
+//
+// Trending True Range
+
+length = intInput("Length", 14)
+
+er = abs(mom(close, length)) / sum(abs(change(close, 1)), length)
+// Use ema() instead of tv's rma()
+x = er - ema(er, length)
+// Manual calc tv's sign()
+sign = iff(eq(x, seriesOf(0.0)), seriesOf(0.0), iff(gt(x, seriesOf(0.0)), seriesOf(1.0), seriesOf(-1.0)))
+ttr = max(ema(sign * trueRange(), length), seriesOf(0.0))
+
+plot(ttr,"TTR","#991515", 2, PlotStyle.LINE, 0, false)
+
+out(NEVER_ORDER)
