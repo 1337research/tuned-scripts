@@ -1,23 +1,41 @@
 // This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
-// © JMOZ (1337research.com)
+// © 1337 Research / JMOZ (https://1337research.com)
 //
-// Moving average slope system
+// Moving Average Slope System
+// 
+// This is a simple and effective trading system based on the slopes of 2 moving averages.
+// It should capture moves during trending markets but is susceptible to drawdown during choppy periods.
+// The fast ma is used for buy/sell signals and the slow ma is used to determine the overall trend so that 
+// we long during bullish periods and short during bearish periods.
+// For each ma you can also configure the rising/falling length.
+
 
 //Inputs
-fast_len = intInput("Fast", 10) 
-slow_len = intInput("Slow", 200)
-fast_rising_len = intInput("Fast rising length", 2)
-slow_rising_len = intInput("Slow rising length", 2)
+fast_len = intInput("Fast",10) 
+slow_len = intInput("Slow",200)
+fast_rising_len = intInput("Fast rising length", 1)
+fast_close_rising_len = intInput("Fast close rising length", 1)
+slow_rising_len = intInput("Slow rising length", 1)
 
-//indicator
+//Indicators
 fast = sma(close, fast_len)
 slow = sma(close, slow_len)
 
 //Conditions
-long_entry = and( and(rising(fast, fast_rising_len), rising(slow, slow_rising_len)), not(position_long) )
-long_close = falling(fast, fast_rising_len)
-short_entry = and( and(falling(fast, fast_rising_len), falling(slow, slow_rising_len)), not(position_short) )
-short_close = rising(fast, fast_rising_len)
+slow_rising = rising(slow, slow_rising_len)
+slow_falling = falling(slow, slow_rising_len)
+
+fast_rising = rising(fast, fast_rising_len)
+fast_falling = falling(fast, fast_rising_len)
+
+fast_close_falling = falling(fast, fast_close_rising_len)
+fast_close_rising = rising(fast, fast_close_rising_len)
+
+//Signals
+long_entry = and( and(fast_rising, slow_rising), not(position_long) )
+long_close = fast_close_falling
+short_entry = and( and(fast_falling, slow_falling), not(position_short) )
+short_close = fast_close_rising
 
 //Plot
 plot(fast, "Fast", "#004BEC", 2)
